@@ -1,0 +1,97 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  name          String
+  passwordHash  String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  teams         TeamMember[]
+  createdTeams  Team[]   @relation("TeamCreator")
+  createdFines  Fine[]   @relation("FineCreator")
+  finesReceived FineAssignment[]
+}
+
+model Team {
+  id              String   @id @default(uuid())
+  name            String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  creatorId       String
+
+  // Relations
+  creator         User    @relation("UserCreatedFines", fields: [creatorId], references: [id])
+  members         TeamMember[]
+  fines           Fine[]
+}
+
+model TeamMember {
+    userId    String
+    teamId    String
+    role      Role     @default(MEMEBER)
+    joinedAt  DateTime @default(now())
+
+    // Relations
+    user      User     @relation(fields: [userId], references: [id])
+    team      Team     @relation(fields: [teamId], references: [id])
+
+    @@id([userId, teamId])
+}
+
+model Fine {
+    id              String @id @default(uuid())
+    title           String
+    descriiption    String?
+    amount          Decimal
+    createdAt       DateTime @default(now())
+    updatedAt       DateTime @updatedAt
+    teamId          String
+    creatorId       String
+
+    // Relations
+    team            Team     @relation(fields: [teamId], references: [id])
+    creator         User     @relation("UserCreatedFines", fields: [creatorId], references: [id])
+    assignments     FineAssignment[]
+
+}
+
+model FineAssignment {
+    id          String   @id @default(uuid())
+    fineId      String
+    userId      String
+    status      FineStatus @default(UNPAID)
+    assignedAt  DateTime @default(now())
+    paidAt   DateTime?
+
+    // Relations
+    fine        Fine     @relation(fields: [fineId], references: [id])
+    user        User     @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum FineStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
