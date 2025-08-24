@@ -15,74 +15,73 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(uuid())
-  email         String   @unique
-  name          String
-  passwordHash  String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
   teams         TeamMember[]
-  createdTeams  Team[]   @relation("TeamCreator")
-  createdFines  Fine[]   @relation("FineCreator")
+  createdTeams  Team[]           @relation("TeamCreator")
+  createdFines  Fine[]           @relation("FineCreator")
   finesReceived FineAssignment[]
 }
 
 model Team {
-  id              String   @id @default(uuid())
-  name            String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  creatorId       String
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  creatorId String
 
   // Relations
-  creator         User    @relation("UserCreatedFines", fields: [creatorId], references: [id])
-  members         TeamMember[]
-  fines           Fine[]
+  creator User         @relation("TeamCreator", fields: [creatorId], references: [id])
+  members TeamMember[]
+  fines   Fine[]
 }
 
 model TeamMember {
-    userId    String
-    teamId    String
-    role      Role     @default(MEMEBER)
-    joinedAt  DateTime @default(now())
+  userId   String
+  teamId   String
+  role     Role     @default(USER)
+  joinedAt DateTime @default(now())
 
-    // Relations
-    user      User     @relation(fields: [userId], references: [id])
-    team      Team     @relation(fields: [teamId], references: [id])
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+  team Team @relation(fields: [teamId], references: [id])
 
-    @@id([userId, teamId])
+  @@id([userId, teamId])
 }
 
 model Fine {
-    id              String @id @default(uuid())
-    title           String
-    descriiption    String?
-    amount          Decimal
-    createdAt       DateTime @default(now())
-    updatedAt       DateTime @updatedAt
-    teamId          String
-    creatorId       String
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  amount      Decimal
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  teamId      String
+  creatorId   String
 
-    // Relations
-    team            Team     @relation(fields: [teamId], references: [id])
-    creator         User     @relation("UserCreatedFines", fields: [creatorId], references: [id])
-    assignments     FineAssignment[]
-
+  // Relations
+  team        Team             @relation(fields: [teamId], references: [id])
+  creator     User             @relation("FineCreator", fields: [creatorId], references: [id])
+  assignments FineAssignment[]
 }
 
 model FineAssignment {
-    id          String   @id @default(uuid())
-    fineId      String
-    userId      String
-    status      FineStatus @default(UNPAID)
-    assignedAt  DateTime @default(now())
-    paidAt   DateTime?
+  id         String     @id @default(uuid())
+  fineId     String
+  userId     String
+  status     FineStatus @default(PENDING)
+  assignedAt DateTime   @default(now())
+  paidAt     DateTime?
 
-    // Relations
-    fine        Fine     @relation(fields: [fineId], references: [id])
-    user        User     @relation(fields: [userId], references: [id])
+  // Relations
+  fine Fine @relation(fields: [fineId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 enum Role {

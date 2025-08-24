@@ -1,12 +1,5 @@
 import { Context } from "hono";
-import { zValidator } from "@hono/zod-validator";
 import { AuthService } from "./auth.service";
-import {
-  registerSchema,
-  loginSchema,
-  refreshTokenSchema,
-  logoutSchema,
-} from "./auth.schema";
 
 const authService = new AuthService();
 
@@ -44,7 +37,8 @@ export class AuthController {
 
   async logout(c: Context): Promise<Response> {
     try {
-      const { refreshToken } = c.req.valid("json");
+      const input = c.req.valid("json");
+      const refreshToken = input.refreshToken;
       await authService.logoutUser(refreshToken);
 
       return c.json({ message: "Logout successful" });
